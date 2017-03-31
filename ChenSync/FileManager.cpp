@@ -17,19 +17,19 @@ FileManager::FileManager(string rootDir, string deviceName)
 }
 
 
-vector<string> FileManager::checkFile(string folder, const vector<File> &files)
+vector<string> FileManager::checkFile(string folder, const vector<FileInfo> &files)
 {
 	string fullFolder = combinePath(homeDir, folder);
 
 	vector<string> newFiles;
-	if (access(fullFolder.c_str(), 0) != 0) {
-		for (File file : files) {
+	if (_access(fullFolder.c_str(), 0) != 0) {
+		for (FileInfo file : files) {
 			newFiles.push_back(file.path);
 		}
 		return newFiles;
 	}
 
-	for (File file : files) {
+	for (FileInfo file : files) {
 		if (checkFile(fullFolder,file)) {
 			newFiles.push_back(file.path);
 		}
@@ -66,7 +66,7 @@ bool FileManager::createFileDir(string file) {
 	return mkdirs(file.substr(0,pos));
 }
 
-bool FileManager::checkFile(string folder,File file)
+bool FileManager::checkFile(string folder,FileInfo file)
 {
 	string fileTemp = file.path;
 	for (size_t i = 0; i < fileTemp.length(); i ++) {
@@ -112,7 +112,7 @@ bool FileManager::mkdirs(string dir)
 		*dir.rbegin() = '\0';
 	}
 
-	if (access(dir.c_str(), 0) == 0)
+	if (_access(dir.c_str(), 0) == 0)
 		return true;
 
 	char* tmp = &dir[0];
@@ -127,6 +127,6 @@ bool FileManager::mkdirs(string dir)
 		*p = '\\';
 	}
 
-	return mkdir(tmp) == 0;
+	return _mkdir(tmp) == 0;
 }
 

@@ -131,13 +131,13 @@ void FileProcess::processCheck(const string & data) {
 		sendError(1, "device or folder is empty!");
 		return;
 	}
-	vector<File> files;
+	vector<FileInfo> files;
 	string path;
 	int64_t fileSize;
 	int64_t modifyTime;
 
 	while (is >> path >> fileSize >> modifyTime) {
-		files.push_back(File(path, modifyTime, fileSize));
+		files.push_back(FileInfo(path, modifyTime, fileSize));
 	}
 	if (files.empty()) {
 		cerr << "no file to check" << endl;
@@ -177,7 +177,7 @@ void FileProcess::processUpload(const string & data) {
 	manager.createFileDir(fullPath);
 	string fullPathTemp = fullPath + ".temp";
 
-	if (access(fullPath.c_str(), 0) == 0) {
+	if (_access(fullPath.c_str(), 0) == 0) {
 		if (remove(fullPath.c_str()) != 0) {
 			sendError(2, "delete old file fail!");
 			return;
@@ -195,7 +195,7 @@ void FileProcess::processUpload(const string & data) {
 
 	string fileData(1024 * 10, 0);
 	while (recvFileSize < fileSize) {
-		int ret = recv(so, &fileData[0], fileData.size(), 0);
+		int ret = recv(so, &fileData[0], (int)fileData.size(), 0);
 		if (ret <= 0) {
 			if (runFlag)  cerr << "recv file data fail:" << fullPath <<",error:"<< WSAGetLastError() <<endl;
 			break;

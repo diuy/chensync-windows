@@ -3,10 +3,10 @@
 #include <cstdint>
 using namespace std;
 
-class File
+class FileInfo
 {
 public:
-	File(string path, int64_t modifyTime, int64_t fileSize)
+	FileInfo(string path, int64_t modifyTime, int64_t fileSize)
 		: path(path)
 		, modifyTime(modifyTime)
 		, fileSize(fileSize)

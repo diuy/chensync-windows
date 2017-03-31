@@ -148,7 +148,7 @@
     <ClCompile Include="mian.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="File.h" />
+    <ClInclude Include="FileInfo.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FileProcess.h" />
     <ClInclude Include="FileServer.h" />

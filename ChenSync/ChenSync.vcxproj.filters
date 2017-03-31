@@ -9,7 +9,7 @@
   <ItemGroup>
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FileServer.h" />
-    <ClInclude Include="File.h" />
     <ClInclude Include="FileProcess.h" />
+    <ClInclude Include="FileInfo.h" />
   </ItemGroup>
 </Project>
