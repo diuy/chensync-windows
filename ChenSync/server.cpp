@@ -169,12 +169,7 @@ static string nowTimeStr() {
 	return string(str);
 }
 
-static bool start(const char* command) {
-	
-	int port = 8888;
-	string exe, cmd, path;
-	istringstream is(command);
-	is >> exe >> cmd >> path >> port;
+static void setupLog(string exe) {
 	size_t pos = exe.rfind("\\");
 	if (pos != string::npos) {
 		string coutfile = exe.substr(0, pos);
@@ -187,6 +182,15 @@ static bool start(const char* command) {
 		setbuf(fout, NULL);
 		setbuf(ferr, NULL);
 	}
+}
+
+static bool start(const char* command) {
+	
+	int port = 8888;
+	string exe, cmd, path;
+	istringstream is(command);
+	is >> exe >> cmd >> path >> port;
+	setupLog(exe);
 
 	if (path.empty()) {
 		cerr << "no data dir" << endl;

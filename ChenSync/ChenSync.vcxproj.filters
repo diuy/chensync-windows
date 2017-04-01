@@ -5,6 +5,8 @@
     <ClCompile Include="mian.cpp" />
     <ClCompile Include="FileServer.cpp" />
     <ClCompile Include="FileProcess.cpp" />
+    <ClCompile Include="server.cpp" />
+    <ClCompile Include="install.bat" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileManager.h" />

@@ -1,0 +1,1 @@
+sc create ChenSync binPath="E:\code2\sync\chensync-windows\x64\Debug\ChenSync.exe server D:\sync 9999"
