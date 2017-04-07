@@ -145,7 +145,10 @@
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="FileProcess.cpp" />
     <ClCompile Include="FileServer.cpp" />
-    <ClCompile Include="install.bat" />
+    <ClCompile Include="install.bat">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="mian.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ExcludedFromBuild>

@@ -25,5 +25,9 @@ private:
 	void sendCheckResult(vector<string>& files);
 	void sendUploadResult(int64_t recvSize);
 	void sendError(uint8_t result, string reason);
+	void wrapFileName(string &name);
+	void unwrapFileName(string &name);
+
+
 };
 

@@ -131,12 +131,16 @@ void FileProcess::processCheck(const string & data) {
 		sendError(1, "device or folder is empty!");
 		return;
 	}
+	unwrapFileName(device);
+	unwrapFileName(folder);
+
 	vector<FileInfo> files;
 	string path;
 	int64_t fileSize;
 	int64_t modifyTime;
 
 	while (is >> path >> fileSize >> modifyTime) {
+		unwrapFileName(path);
 		files.push_back(FileInfo(path, modifyTime, fileSize));
 	}
 	if (files.empty()) {
@@ -163,6 +167,10 @@ void FileProcess::processUpload(const string & data) {
 		sendError(1, "device or folder or path is empty!");
 		return;
 	}
+	unwrapFileName(device);
+	unwrapFileName(folder);
+	unwrapFileName(path);
+
 	FileManager manager(rootDir, device);
 	string fullPath = manager.getFullPath(folder, path);
 
@@ -234,6 +242,7 @@ void FileProcess::processUpload(const string & data) {
 void FileProcess::sendCheckResult(vector<string>& files) {
 	ostringstream os;
 	for (string file : files) {
+		wrapFileName(file);
 		os << file << endl;
 	}
 	string data = os.str();
@@ -303,5 +312,19 @@ void FileProcess::sendError(uint8_t result, string reason) {
 			break;
 		}
 		sendSize += ret;
+	}
+}
+
+void FileProcess::wrapFileName(string & name) {
+	for (size_t i = 0; i < name.size(); i++) {
+		if (name[i] == ' ')
+			name[i] = '*';
+	}
+}
+
+void FileProcess::unwrapFileName(string & name) {
+	for (size_t i = 0; i < name.size(); i++) {
+		if (name[i] == '*')
+			name[i] = ' ';
 	}
 }
