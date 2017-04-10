@@ -21,8 +21,8 @@ int main(int argc, const char *  argv[]) {
 		return startServer(argc, argv);
 	}
 
-	dataDir = argv[2];
-	if (argc > 3) {
+	dataDir = argv[1];
+	if (argc > 2) {
 		istringstream is(argv[2]);
 		is >> port;
 	}
