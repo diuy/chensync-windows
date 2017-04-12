@@ -5,6 +5,7 @@
 #include <fstream>
 #include <io.h>
 #include "FileManager.h"
+#include "Util.h"
 
 constexpr int HEAD_SIZE = 8;
 constexpr int TYPE_CHECK = 1;
@@ -53,10 +54,11 @@ FileProcess::FileProcess(string rootDir, SOCKET so)
 }
 
 FileProcess::~FileProcess() {
-	runFlag = false;
-	closesocket(so);
+	if (!finishedFlag) {
+		runFlag = false;
+		closesocket(so);
+	}
 	th.join();
-	so = INVALID_SOCKET;
 }
 
 bool FileProcess::finished() {
@@ -84,24 +86,24 @@ bool FileProcess::parse(string & data, int & type) {
 	//接收数据
 	int ret = recv(so, (char*)bytes, HEAD_SIZE, 0);
 	if (ret <= 0) {
-		if (runFlag) cerr << "recv error :" << ret << endl;
+		if (runFlag) CERR << "recv error :" << ret << endl;
 		return false;
 	}
 
 	if (bytes[0] != 0xCC || bytes[1] != 0xBB) {
-		cout << "bad sync head" << endl;
+		COUT << "bad sync head" << endl;
 		return false;
 	}
 
 	type = bytes[2];
 	int32_t size = *((int32_t*)(bytes + 4));
 	if (type != TYPE_CHECK && type != TYPE_UPLOAD) {
-		cout << "bad cmd type" << endl;
+		COUT << "bad cmd type" << endl;
 		return false;
 	}
 
 	if (size <= 0 || size > 1024 * 1024 * 10) {
-		cout << "body size :" << size << endl;
+		COUT << "body size :" << size << endl;
 		return false;
 	}
 	data.resize(size);
@@ -110,7 +112,7 @@ bool FileProcess::parse(string & data, int & type) {
 	while (recvSize < size) {
 		ret = recv(so, &data[recvSize], size - recvSize, 0);
 		if (ret <= 0) {
-			if (runFlag)  cerr << "recv data error :" << ret << endl;
+			if (runFlag)  CERR << "parse recv data error :" << ret <<",error:" << WSAGetLastError() << endl;
 			break;
 		}
 		recvSize += ret;
@@ -127,7 +129,7 @@ void FileProcess::processCheck(const string & data) {
 	string device, folder;
 	is >> device >> folder;
 	if (device.empty() || folder.empty()) {
-		cerr << "device or folder is empty" << endl;
+		CERR << "device or folder is empty" << endl;
 		sendError(1, "device or folder is empty!");
 		return;
 	}
@@ -144,14 +146,14 @@ void FileProcess::processCheck(const string & data) {
 		files.push_back(FileInfo(path, modifyTime, fileSize));
 	}
 	if (files.empty()) {
-		cerr << "no file to check" << endl;
+		CERR << "no file to check" << endl;
 		sendError(1, "no file to check!");
 		return;
 	}
 
 	FileManager manager(rootDir, device);
 	vector<string> newFiles = manager.checkFile(folder, files);
-	cout << "check folder device:" << device << ",folder:" << folder <<",new:"<< newFiles.size()<< endl;
+	COUT << "check folder device:" << device << ",folder:" << folder <<",new:"<< newFiles.size()<< endl;
 
 	sendCheckResult(newFiles);
 }
@@ -163,7 +165,7 @@ void FileProcess::processUpload(const string & data) {
 	int64_t modifyTime;
 	is >> device >> folder >> path >> fileSize >> modifyTime;
 	if (device.empty() || folder.empty() || path.empty()) {
-		cerr << "device or folder  path is empty" << endl;
+		CERR << "device or folder  path is empty" << endl;
 		sendError(1, "device or folder or path is empty!");
 		return;
 	}
@@ -174,10 +176,10 @@ void FileProcess::processUpload(const string & data) {
 	FileManager manager(rootDir, device);
 	string fullPath = manager.getFullPath(folder, path);
 
-	cout << "upload file start:" << fullPath << ",size:" << fileSize << endl;
+	COUT << "upload file start:" << fullPath << ",size:" << fileSize << endl;
 
 	if (fileSize <= 0) {
-		cerr << "file size error!" << endl;
+		CERR << "file size error!" << endl;
 		sendError(1, "file size error!");
 		return;
 	}
@@ -194,7 +196,7 @@ void FileProcess::processUpload(const string & data) {
 
 	ofstream os(fullPathTemp.c_str(), ios::out | ios::trunc | ios::binary);
 	if (!os.is_open()) {
-		cerr << "create file fail :" << fullPathTemp << endl;
+		CERR << "create file fail :" << fullPathTemp << endl;
 		sendError(2, "create file fail!");
 		return;
 	}
@@ -205,12 +207,12 @@ void FileProcess::processUpload(const string & data) {
 	while (recvFileSize < fileSize) {
 		int ret = recv(so, &fileData[0], (int)fileData.size(), 0);
 		if (ret <= 0) {
-			if (runFlag)  cerr << "recv file data fail:" << fullPath <<",error:"<< WSAGetLastError() <<endl;
+			if (runFlag)  CERR << "recv file data fail:" << fullPath <<",error:"<< WSAGetLastError() <<endl;
 			break;
 		}
 		os.write(fileData.data(), ret);
 		if (!os.good()) {
-			cerr << "write file fail :" << fullPath << endl;
+			CERR << "write file fail :" << fullPath << endl;
 			sendError(3, "write file fail!");
 			break;
 		}
@@ -225,18 +227,18 @@ void FileProcess::processUpload(const string & data) {
 
 	if (recvFileSize >= fileSize) {
 		if (0 != rename(fullPathTemp.c_str(), fullPath.c_str())) {
-			cerr << "rename file fail :" << fullPath << ",errno:"<< errno <<endl;
+			CERR << "rename file fail :" << fullPath << ",errno:"<< errno <<endl;
 			sendError(3, "rename file fail!");
 			return;
 		}
 	}
 	if (!manager.setModifyTime(fullPath, modifyTime)) {
-		cerr << "set file modify time fail :" << fullPath << endl;
+		CERR << "set file modify time fail :" << fullPath << endl;
 		sendError(3, "set file modify time fail!");
 		return;
 	}
 	sendUploadResult(recvFileSize);
-	cout << "upload file success:" << fullPath<<endl;
+	COUT << "upload file success:" << fullPath<<endl;
 }
 
 void FileProcess::sendCheckResult(vector<string>& files) {
@@ -252,7 +254,7 @@ void FileProcess::sendCheckResult(vector<string>& files) {
 
 	int ret = send(so, (char*)bytes, HEAD_SIZE, 0);
 	if (ret < HEAD_SIZE) {
-		if (runFlag)  cerr << "sendCheckResult:send  head error :" << ret << endl;
+		if (runFlag)  CERR << "sendCheckResult:send  head error :" << ret << endl;
 		return;
 	}
 
@@ -260,7 +262,7 @@ void FileProcess::sendCheckResult(vector<string>& files) {
 	while (sendSize < size) {
 		ret = send(so, &data[sendSize], size - sendSize, 0);
 		if (ret <= 0) {
-			if (runFlag)  cerr << "sendCheckResult:send data error :" << ret << endl;
+			if (runFlag)  CERR << "sendCheckResult:send data error :" << ret << endl;
 			break;
 		}
 		sendSize += ret;
@@ -277,7 +279,7 @@ void FileProcess::sendUploadResult(int64_t recvSize) {
 
 	int ret = send(so, (char*)bytes, HEAD_SIZE, 0);
 	if (ret < HEAD_SIZE) {
-		if (runFlag)  cerr << "sendUploadResult:send  head error :" << ret << endl;
+		if (runFlag)  CERR << "sendUploadResult:send  head error :" << ret << endl;
 		return;
 	}
 
@@ -285,7 +287,7 @@ void FileProcess::sendUploadResult(int64_t recvSize) {
 	while (sendSize < size) {
 		ret = send(so, &data[sendSize], size - sendSize, 0);
 		if (ret <= 0) {
-			if (runFlag)  cerr << "sendUploadResult:send data error :" << ret << endl;
+			if (runFlag)  CERR << "sendUploadResult:send data error :" << ret << endl;
 			break;
 		}
 		sendSize += ret;
@@ -300,7 +302,7 @@ void FileProcess::sendError(uint8_t result, string reason) {
 
 	int ret = send(so, (char*)bytes, HEAD_SIZE, 0);
 	if (ret < HEAD_SIZE) {
-		if (runFlag)  cerr << "send  head error :" << ret << endl;
+		if (runFlag)  CERR << "send  head error :" << ret << endl;
 		return;
 	}
 
@@ -308,7 +310,7 @@ void FileProcess::sendError(uint8_t result, string reason) {
 	while (sendSize < size) {
 		ret = send(so, &reason[sendSize], size - sendSize, 0);
 		if (ret <= 0) {
-			if (runFlag)  cerr << "send data error :" << ret << endl;
+			if (runFlag)  CERR << "send data error :" << ret << endl;
 			break;
 		}
 		sendSize += ret;

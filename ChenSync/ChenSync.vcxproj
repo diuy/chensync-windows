@@ -154,12 +154,14 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="server.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileInfo.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="FileProcess.h" />
     <ClInclude Include="FileServer.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

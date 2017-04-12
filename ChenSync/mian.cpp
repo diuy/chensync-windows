@@ -3,6 +3,7 @@
 #include "FileServer.h"
 #include <fstream>
 #include <sstream>
+#include "Util.h"
 using namespace std;
 
 
@@ -14,7 +15,7 @@ int main(int argc, const char *  argv[]) {
 	int port = 8888;
 
 	if (argc < 2) {
-		cerr << "arg error" << endl;
+		CERR << "arg error" << endl;
 		return -1;
 	}
 	if (strcmp(argv[1], "server") == 0) {
@@ -27,13 +28,13 @@ int main(int argc, const char *  argv[]) {
 		is >> port;
 	}
 
-	cout << "data dir :" << dataDir << endl << "port:" << port << endl;
+	COUT << "data dir :" << dataDir <<  ",port:" << port << endl;
 
 	FileServer server(dataDir,port);
 	if (server.start()) {
-		cout << "start success!" << endl;
+		COUT << "start success!" << endl;
 	} else {
-		cout << "start fail!" << endl;
+		COUT << "start fail!" << endl;
 	}
 	cin.get();
 	server.stop();

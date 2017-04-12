@@ -5,6 +5,8 @@
 #include <sstream>
 #include <fstream>
 #include "FileServer.h"
+#include "Util.h"
+#include <direct.h>
 
 using namespace std;
 
@@ -160,21 +162,17 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl) {
 static FILE *fout=NULL,*ferr=NULL;
 static unique_ptr<FileServer> fileServer;
 
-static string nowTimeStr() {
-	char str[255];
-	time_t t= time(NULL);
-	tm* t2;
-	t2 = localtime(&t);
-	strftime(str, sizeof(str), "%Y%m%d", t2);
-	return string(str);
-}
 
 static void setupLog(string exe) {
 	size_t pos = exe.rfind("\\");
 	if (pos != string::npos) {
-		string coutfile = exe.substr(0, pos);
-		string cerrfile = coutfile;
-		string str = nowTimeStr();
+		string logdir = exe.substr(0, pos);
+		logdir.append("\\log");
+		_mkdir(logdir.c_str());
+
+		string coutfile = logdir;
+		string cerrfile = logdir;
+		string str = nowDateStr();
 		coutfile.append("\\").append("cout_").append(str).append(".txt");
 		cerrfile.append("\\").append("cerr_").append(str).append(".txt");
 		fout = freopen(coutfile.c_str(), "a+", stdout);
@@ -193,17 +191,17 @@ static bool start(const char* command) {
 	setupLog(exe);
 
 	if (path.empty()) {
-		cerr << "no data dir" << endl;
+		CERR << "no data dir" << endl;
 		return false;
 	}
-	cout << "data dir :" << path << endl << "port:" << port << endl;
+	COUT << "data dir :" << path << endl << "port:" << port << endl;
 	fileServer.reset(new FileServer(path, port));
 
 	if (fileServer->start()) {
-		cout << "start success!" << endl;
+		CERR << "start success!" << endl;
 		return true;
 	} else {
-		cerr << "start fail!" << endl;
+		CERR << "start fail!" << endl;
 		return false;
 	}
 }

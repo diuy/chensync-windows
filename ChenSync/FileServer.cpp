@@ -1,5 +1,7 @@
 #include <iostream>
 #include "FileServer.h"
+#include "Util.h"
+
 #pragma comment(lib,"ws2_32.lib")
 
 
@@ -20,12 +22,12 @@ bool FileServer::start() {
 		return true;
 
 	if (rootDir.empty()) {
-		cerr << "rootDir is empty" << endl;
+		CERR << "rootDir is empty" << endl;
 		return false;
 	}
 
 	if (port <= 0 || port >= 65535) {
-		cerr << "port is error :" << port << endl;
+		CERR << "port is error :" << port << endl;
 		return false;
 	}
 
@@ -34,14 +36,14 @@ bool FileServer::start() {
 	WORD sockVersion = MAKEWORD(2, 2);
 	WSADATA wsaData;
 	if (WSAStartup(sockVersion, &wsaData) != 0) {
-		cerr << "WSAStartup error" << endl;
+		CERR << "WSAStartup error" << endl;
 		return false;
 	}
 
 	//创建套接字
 	SOCKET slisten = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (slisten == INVALID_SOCKET) {
-		cerr << "socket create fail" << endl;
+		CERR << "socket create fail" << endl;
 		return false;
 	}
 
@@ -52,14 +54,14 @@ bool FileServer::start() {
 	sin.sin_addr.S_un.S_addr = INADDR_ANY;
 	if (::bind(slisten, (LPSOCKADDR)&sin, sizeof(sin)) == SOCKET_ERROR) {
 		closesocket(slisten);
-		cout << ("bind error !") << endl;
+		COUT << ("bind error !") << endl;
 		return false;
 	}
 
 	//开始监听
 	if (listen(slisten, 20) == SOCKET_ERROR) {
 		closesocket(slisten);
-		cout << ("listen error !") << endl;
+		COUT << ("listen error !") << endl;
 		return false;
 	}
 	runFlag = true;
@@ -93,7 +95,7 @@ void FileServer::listener() {
 
 		if (sClient == INVALID_SOCKET) {
 			if (runFlag) {
-				cout << "accept error !" << endl;
+				COUT << "accept error !" << endl;
 			}
 			continue;
 		}
@@ -103,7 +105,7 @@ void FileServer::listener() {
 		::setsockopt(sClient, SOL_SOCKET, SO_RCVBUF, (char *)&sendSize, sizeof(sendSize));
 		::setsockopt(sClient, SOL_SOCKET, SO_SNDBUF, (char *)&sendSize, sizeof(sendSize));
 		::setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(char));
-		cout << "accept client" << inet_ntoa(remoteAddr.sin_addr) << endl;
+		COUT << "accept client:" << inet_ntoa(remoteAddr.sin_addr) << endl;
 		processes.push_back(unique_ptr<FileProcess>(new FileProcess(rootDir,sClient)));
 
 		for (auto item = processes.begin(); item != processes.end();) {
