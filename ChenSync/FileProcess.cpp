@@ -178,7 +178,7 @@ void FileProcess::processUpload(const string & data) {
 
 	COUT << "upload file start:" << fullPath << ",size:" << fileSize << endl;
 
-	if (fileSize <= 0) {
+	if (fileSize < 0) {
 		CERR << "file size error!" << endl;
 		sendError(1, "file size error!");
 		return;
